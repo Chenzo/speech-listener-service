@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+.speech-listener-config.json
+/models/
 
 # debug
 npm-debug.log*
