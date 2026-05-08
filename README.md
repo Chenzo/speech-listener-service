@@ -40,10 +40,58 @@ npm start
 
 On first run, the app lists available audio input devices and prompts for a number. It saves the selected device in `.speech-listener-config.json` and uses that device automatically on future runs.
 
+The app also starts a local WebSocket server at:
+
+```text
+ws://localhost:3011
+```
+
 ## Re-select Device
 
 ```powershell
 npm start -- --select-device
+```
+
+## WebSocket Port
+
+The default port is `3011`. To change it for one terminal session:
+
+```powershell
+$env:SPEECH_WS_PORT="3012"
+npm start
+```
+
+You can also add `websocketPort` to `.speech-listener-config.json`:
+
+```json
+{
+  "audioDeviceName": "Your Microphone Name",
+  "websocketPort": 3012
+}
+```
+
+The environment variable takes priority over the config file.
+
+## WebSocket Messages
+
+Transcript messages:
+
+```json
+{ "type": "transcript", "text": "hello there", "final": false }
+```
+
+Trigger messages:
+
+```json
+{ "type": "trigger", "phrase": "rock", "audio": "rl_short" }
+```
+
+Status messages:
+
+```json
+{ "type": "status", "status": "listening" }
+{ "type": "status", "status": "paused" }
+{ "type": "status", "status": "client_connected" }
 ```
 
 ## External Prerequisites
