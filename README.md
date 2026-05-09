@@ -66,6 +66,7 @@ You can also add `websocketPort` to `.speech-listener-config.json`:
 ```json
 {
   "audioDeviceName": "Your Microphone Name",
+  "modelPath": "C:\\path\\to\\vosk-model-small-en-us-0.15",
   "websocketPort": 3012
 }
 ```
@@ -78,7 +79,9 @@ The environment variable takes priority over the config file.
 npm run dist
 ```
 
-The portable build bundles the Python/Vosk helper with PyInstaller, so release users do not need a separate Python or Python `vosk` install. Building the release still requires PyInstaller and the Python `vosk` package on the build machine. A local Vosk model is still required at runtime.
+The portable build bundles the Python/Vosk helper with PyInstaller, so release users do not need a separate Python or Python `vosk` install. Building the release still requires PyInstaller and the Python `vosk` package on the build machine.
+
+Release users still need to download and extract a Vosk model. In the Electron app, use **Choose** next to **Vosk model** and select the extracted model folder, such as `vosk-model-small-en-us-0.15`.
 
 ## WebSocket Messages
 

@@ -8,7 +8,9 @@ const { spawn } = require("child_process");
 const ffmpegPath = require("ffmpeg-static");
 
 const SAMPLE_RATE = 16000;
-const CONFIG_FILE = path.join(__dirname, ".speech-listener-config.json");
+const CONFIG_FILE = process.env.SPEECH_CONFIG_FILE
+  ? path.resolve(process.env.SPEECH_CONFIG_FILE)
+  : path.join(__dirname, ".speech-listener-config.json");
 const MODELS_DIR = path.join(__dirname, "models");
 const DEFAULT_MODEL_DIR = path.join(MODELS_DIR, "vosk-model-small-en-us-0.15");
 const TRANSCRIBE_HELPER = path.join(__dirname, "transcribe.py");
@@ -63,7 +65,7 @@ async function main() {
 
   console.log(`Selected device: ${deviceName}`);
 
-  const modelPath = findModelPath();
+  const modelPath = findModelPath(config);
   console.log(`Vosk model: ${modelPath}`);
 
   if (!fs.existsSync(modelPath)) {
@@ -71,7 +73,7 @@ async function main() {
       [
         "Vosk model not found.",
         `Expected a model at: ${modelPath}`,
-        `Download and extract a Vosk model into ${MODELS_DIR}, or set VOSK_MODEL_PATH.`,
+        `Choose a Vosk model folder in the launcher, download and extract a Vosk model into ${MODELS_DIR}, or set VOSK_MODEL_PATH.`,
       ].join("\n")
     );
   }
@@ -92,6 +94,7 @@ function readConfig() {
 }
 
 function writeConfig(config) {
+  fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
   fs.writeFileSync(CONFIG_FILE, `${JSON.stringify(config, null, 2)}\n`);
 }
 
@@ -123,9 +126,13 @@ function getWebSocketPort(config) {
   return port;
 }
 
-function findModelPath() {
+function findModelPath(config) {
   if (process.env.VOSK_MODEL_PATH) {
     return path.resolve(process.env.VOSK_MODEL_PATH);
+  }
+
+  if (config.modelPath) {
+    return path.resolve(config.modelPath);
   }
 
   if (!fs.existsSync(MODELS_DIR)) {

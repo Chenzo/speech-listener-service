@@ -1,11 +1,13 @@
 const fs = require("fs");
 const path = require("path");
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const { spawn } = require("child_process");
 
 const APP_ROOT = path.resolve(__dirname, "..");
 const LISTENER_SCRIPT = path.join(APP_ROOT, "index.js");
 const TRANSCRIBE_EXE = "transcribe.exe";
+const CONFIG_FILE_NAME = ".speech-listener-config.json";
+const DEFAULT_MODEL_DIR = path.join(APP_ROOT, "models", "vosk-model-small-en-us-0.15");
 
 let mainWindow;
 let listenerProcess;
@@ -28,6 +30,7 @@ function getChildEnv() {
   const env = {
     ...process.env,
     ELECTRON_RUN_AS_NODE: "1",
+    SPEECH_CONFIG_FILE: getConfigFile(),
   };
   const transcriberPath = findBundledTranscriber();
 
@@ -48,6 +51,47 @@ function findBundledTranscriber() {
   }
 
   return candidates.find((candidate) => fs.existsSync(candidate));
+}
+
+function getConfigFile() {
+  const configDir = app.isPackaged ? app.getPath("userData") : APP_ROOT;
+  return path.join(configDir, CONFIG_FILE_NAME);
+}
+
+function readConfig() {
+  const configFile = getConfigFile();
+
+  if (!fs.existsSync(configFile)) {
+    return {};
+  }
+
+  return JSON.parse(fs.readFileSync(configFile, "utf8"));
+}
+
+function writeConfig(config) {
+  const configFile = getConfigFile();
+  fs.mkdirSync(path.dirname(configFile), { recursive: true });
+  fs.writeFileSync(configFile, `${JSON.stringify(config, null, 2)}\n`);
+}
+
+function findEffectiveModelPath(config) {
+  if (process.env.VOSK_MODEL_PATH) {
+    return path.resolve(process.env.VOSK_MODEL_PATH);
+  }
+
+  if (config.modelPath) {
+    return path.resolve(config.modelPath);
+  }
+
+  return DEFAULT_MODEL_DIR;
+}
+
+function isVoskModelFolder(modelPath) {
+  if (!modelPath || !fs.existsSync(modelPath) || !fs.statSync(modelPath).isDirectory()) {
+    return false;
+  }
+
+  return ["am", "conf", "graph"].every((entry) => fs.existsSync(path.join(modelPath, entry)));
 }
 
 function sendToWindow(channel, payload) {
@@ -73,6 +117,16 @@ function stopListener() {
 
   listenerProcess.kill("SIGINT");
 }
+
+ipcMain.handle("config:get", () => {
+  const config = readConfig();
+
+  return {
+    audioDeviceName: config.audioDeviceName || "",
+    modelPath: config.modelPath || "",
+    configFile: getConfigFile(),
+  };
+});
 
 ipcMain.handle("devices:list", () => {
   return new Promise((resolve, reject) => {
@@ -105,6 +159,26 @@ ipcMain.handle("devices:list", () => {
   });
 });
 
+ipcMain.handle("model:choose", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Choose Vosk Model Folder",
+    properties: ["openDirectory"],
+  });
+
+  if (result.canceled || !result.filePaths.length) {
+    return { canceled: true, modelPath: readConfig().modelPath || "" };
+  }
+
+  const modelPath = result.filePaths[0];
+
+  if (!isVoskModelFolder(modelPath)) {
+    throw new Error("Choose the extracted Vosk model folder, such as vosk-model-small-en-us-0.15.");
+  }
+
+  writeConfig({ ...readConfig(), modelPath });
+  return { canceled: false, modelPath };
+});
+
 ipcMain.handle("listener:start", (event, deviceName) => {
   if (!deviceName) {
     throw new Error("Choose a microphone before starting.");
@@ -112,6 +186,12 @@ ipcMain.handle("listener:start", (event, deviceName) => {
 
   if (listenerProcess && listenerProcess.exitCode === null) {
     throw new Error("Listener is already running.");
+  }
+
+  const modelPath = findEffectiveModelPath(readConfig());
+
+  if (!fs.existsSync(modelPath)) {
+    throw new Error("Choose a Vosk model folder before starting.");
   }
 
   listenerProcess = runListenerCommand(["--device-name", deviceName]);

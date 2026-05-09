@@ -148,7 +148,8 @@
           <p><strong>Current release requirement:</strong></p>
           <p>
             The Electron app bundles the launcher, Node service, and
-            Python/Vosk transcriber. A local Vosk model is still required.
+            Python/Vosk transcriber. Download and extract a Vosk model, then
+            choose that model folder in the app.
           </p>
         </div>
       </section>
@@ -163,6 +164,11 @@
 
         <p>Install the default Vosk model:</p>
         <pre><code>npm run install-model</code></pre>
+
+        <p>
+          The Electron launcher can also save a custom extracted model folder
+          with the Vosk model chooser.
+        </p>
 
         <p>Start the command-line listener:</p>
         <pre><code>npm run start</code></pre>

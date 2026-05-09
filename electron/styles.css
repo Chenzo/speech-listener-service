@@ -26,6 +26,7 @@ label {
 }
 
 .device-row,
+.model-row,
 .actions {
   display: flex;
   gap: 8px;
@@ -37,10 +38,16 @@ select {
 }
 
 select,
+input,
 button {
   min-height: 34px;
   padding: 6px 10px;
   font: inherit;
+}
+
+input {
+  flex: 1;
+  min-width: 0;
 }
 
 button {
@@ -53,7 +60,7 @@ button {
 }
 
 #log {
-  height: 260px;
+  height: 210px;
   margin: 0;
   padding: 10px;
   overflow: auto;
