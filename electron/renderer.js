@@ -1,7 +1,12 @@
+const settingsView = document.getElementById("settings-view");
+const runningView = document.getElementById("running-view");
 const deviceSelect = document.getElementById("device");
 const refreshButton = document.getElementById("refresh");
 const modelPathInput = document.getElementById("model-path");
 const chooseModelButton = document.getElementById("choose-model");
+const portInput = document.getElementById("port");
+const triggersContainer = document.getElementById("triggers");
+const addTriggerButton = document.getElementById("add-trigger");
 const startButton = document.getElementById("start");
 const stopButton = document.getElementById("stop");
 const statusText = document.getElementById("status");
@@ -17,11 +22,8 @@ function setStatus(message) {
 }
 
 function setRunning(isRunning) {
-  startButton.disabled = isRunning;
-  stopButton.disabled = !isRunning;
-  refreshButton.disabled = isRunning;
-  chooseModelButton.disabled = isRunning;
-  deviceSelect.disabled = isRunning;
+  settingsView.hidden = isRunning;
+  runningView.hidden = !isRunning;
 }
 
 function appendLog(message) {
@@ -34,9 +36,62 @@ function setModelPath(modelPath) {
   modelPathInput.title = modelPath || "";
 }
 
+function createTriggerRow(trigger = {}) {
+  const row = document.createElement("div");
+  const phraseInput = document.createElement("input");
+  const audioInput = document.createElement("input");
+  const removeButton = document.createElement("button");
+
+  row.className = "trigger-row";
+  phraseInput.type = "text";
+  phraseInput.placeholder = "Phrase";
+  phraseInput.value = trigger.phrase || "";
+  phraseInput.dataset.field = "phrase";
+  audioInput.type = "text";
+  audioInput.placeholder = "Audio";
+  audioInput.value = trigger.audio || "";
+  audioInput.dataset.field = "audio";
+  removeButton.type = "button";
+  removeButton.textContent = "Remove";
+
+  removeButton.addEventListener("click", () => {
+    row.remove();
+  });
+
+  row.appendChild(phraseInput);
+  row.appendChild(audioInput);
+  row.appendChild(removeButton);
+  return row;
+}
+
+function setTriggers(triggers) {
+  triggersContainer.innerHTML = "";
+  triggers.forEach((trigger) => {
+    triggersContainer.appendChild(createTriggerRow(trigger));
+  });
+}
+
+function getTriggers() {
+  return Array.from(triggersContainer.querySelectorAll(".trigger-row")).map((row) => ({
+    phrase: row.querySelector('[data-field="phrase"]').value.trim(),
+    audio: row.querySelector('[data-field="audio"]').value.trim(),
+  }));
+}
+
+function getSettings() {
+  return {
+    audioDeviceName: deviceSelect.value,
+    modelPath: modelPathInput.value,
+    websocketPort: portInput.value,
+    keywordAudioTriggers: getTriggers(),
+  };
+}
+
 async function loadConfig() {
   const config = await window.speechListener.getConfig();
   setModelPath(config.modelPath);
+  portInput.value = config.websocketPort;
+  setTriggers(config.keywordAudioTriggers);
   return config;
 }
 
@@ -59,7 +114,7 @@ async function loadDevices() {
       deviceSelect.value = config.audioDeviceName;
     }
 
-    setStatus(devices.length ? "Choose a microphone." : "No microphones found.");
+    setStatus(devices.length ? "Ready." : "No microphones found.");
   } catch (error) {
     setStatus(error.message);
   }
@@ -80,12 +135,19 @@ chooseModelButton.addEventListener("click", async () => {
   }
 });
 
+addTriggerButton.addEventListener("click", () => {
+  triggersContainer.appendChild(createTriggerRow());
+});
+
 startButton.addEventListener("click", async () => {
   try {
-    await window.speechListener.start(deviceSelect.value);
+    await window.speechListener.saveConfig(getSettings());
+    logOutput.textContent = "";
     setRunning(true);
+    await window.speechListener.start();
     setStatus("Starting listener...");
   } catch (error) {
+    setRunning(false);
     setStatus(error.message);
   }
 });
@@ -108,4 +170,5 @@ window.speechListener.onStatus((status) => {
   setStatus(statusMessages[status] || status);
 });
 
+setRunning(false);
 loadDevices();

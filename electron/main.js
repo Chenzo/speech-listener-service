@@ -2,6 +2,10 @@ const fs = require("fs");
 const path = require("path");
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const { spawn } = require("child_process");
+const {
+  DEFAULT_KEYWORD_AUDIO_TRIGGERS,
+  DEFAULT_WEBSOCKET_PORT,
+} = require("../settings-defaults");
 
 const APP_ROOT = path.resolve(__dirname, "..");
 const LISTENER_SCRIPT = path.join(APP_ROOT, "index.js");
@@ -14,8 +18,8 @@ let listenerProcess;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 560,
-    height: 520,
+    width: 720,
+    height: 760,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -86,6 +90,52 @@ function findEffectiveModelPath(config) {
   return DEFAULT_MODEL_DIR;
 }
 
+function getWebSocketPort(config) {
+  const value = config.websocketPort || DEFAULT_WEBSOCKET_PORT;
+  const port = Number(value);
+
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`Invalid WebSocket port: ${value}`);
+  }
+
+  return port;
+}
+
+function getKeywordAudioTriggers(config) {
+  if (!Array.isArray(config.keywordAudioTriggers)) {
+    return DEFAULT_KEYWORD_AUDIO_TRIGGERS.map((trigger) => ({ ...trigger }));
+  }
+
+  const triggers = config.keywordAudioTriggers.map((trigger) => ({
+    phrase: String((trigger && trigger.phrase) || "").trim(),
+    audio: String((trigger && trigger.audio) || "").trim(),
+  }));
+  const invalidTrigger = triggers.find((trigger) => !trigger.phrase || !trigger.audio);
+
+  if (invalidTrigger) {
+    throw new Error("Each trigger needs both a phrase and an audio value.");
+  }
+
+  return triggers;
+}
+
+function saveConfig(settings) {
+  const config = {
+    ...readConfig(),
+    audioDeviceName: String(settings.audioDeviceName || "").trim(),
+    modelPath: String(settings.modelPath || "").trim(),
+    websocketPort: getWebSocketPort(settings),
+    keywordAudioTriggers: getKeywordAudioTriggers(settings),
+  };
+
+  if (!config.audioDeviceName) {
+    throw new Error("Choose a microphone before starting.");
+  }
+
+  writeConfig(config);
+  return config;
+}
+
 function isVoskModelFolder(modelPath) {
   if (!modelPath || !fs.existsSync(modelPath) || !fs.statSync(modelPath).isDirectory()) {
     return false;
@@ -124,6 +174,20 @@ ipcMain.handle("config:get", () => {
   return {
     audioDeviceName: config.audioDeviceName || "",
     modelPath: config.modelPath || "",
+    websocketPort: getWebSocketPort(config),
+    keywordAudioTriggers: getKeywordAudioTriggers(config),
+    configFile: getConfigFile(),
+  };
+});
+
+ipcMain.handle("config:save", (event, settings) => {
+  const config = saveConfig(settings || {});
+
+  return {
+    audioDeviceName: config.audioDeviceName,
+    modelPath: config.modelPath,
+    websocketPort: config.websocketPort,
+    keywordAudioTriggers: config.keywordAudioTriggers,
     configFile: getConfigFile(),
   };
 });
@@ -179,22 +243,23 @@ ipcMain.handle("model:choose", async () => {
   return { canceled: false, modelPath };
 });
 
-ipcMain.handle("listener:start", (event, deviceName) => {
-  if (!deviceName) {
-    throw new Error("Choose a microphone before starting.");
-  }
-
+ipcMain.handle("listener:start", () => {
   if (listenerProcess && listenerProcess.exitCode === null) {
     throw new Error("Listener is already running.");
   }
 
-  const modelPath = findEffectiveModelPath(readConfig());
+  const config = readConfig();
+  const modelPath = findEffectiveModelPath(config);
+
+  if (!config.audioDeviceName) {
+    throw new Error("Choose a microphone before starting.");
+  }
 
   if (!fs.existsSync(modelPath)) {
     throw new Error("Choose a Vosk model folder before starting.");
   }
 
-  listenerProcess = runListenerCommand(["--device-name", deviceName]);
+  listenerProcess = runListenerCommand(["--device-name", config.audioDeviceName]);
   sendToWindow("listener:status", "starting");
 
   listenerProcess.on("spawn", () => {

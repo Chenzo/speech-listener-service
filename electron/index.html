@@ -10,25 +10,41 @@
     <main>
       <h1>Speech Listener</h1>
 
-      <label for="device">Microphone</label>
-      <div class="device-row">
-        <select id="device"></select>
-        <button id="refresh" type="button">Refresh</button>
-      </div>
+      <section id="settings-view">
+        <label for="device">Microphone</label>
+        <div class="device-row">
+          <select id="device"></select>
+          <button id="refresh" type="button">Refresh</button>
+        </div>
 
-      <label for="model-path">Vosk model</label>
-      <div class="model-row">
-        <input id="model-path" type="text" readonly placeholder="No model folder selected">
-        <button id="choose-model" type="button">Choose</button>
-      </div>
+        <label for="model-path">Vosk model</label>
+        <div class="model-row">
+          <input id="model-path" type="text" readonly placeholder="No model folder selected">
+          <button id="choose-model" type="button">Choose</button>
+        </div>
 
-      <div class="actions">
-        <button id="start" type="button">Start</button>
-        <button id="stop" type="button" disabled>Stop</button>
-      </div>
+        <label for="port">WebSocket port</label>
+        <input id="port" class="port-input" type="number" min="1" max="65535" step="1">
+
+        <div class="trigger-heading">
+          <label>Triggers</label>
+          <button id="add-trigger" type="button">Add</button>
+        </div>
+        <div id="triggers"></div>
+
+        <div class="actions">
+          <button id="start" type="button">Start</button>
+        </div>
+      </section>
+
+      <section id="running-view" hidden>
+        <div class="actions">
+          <button id="stop" type="button">Stop</button>
+        </div>
+        <pre id="log" aria-label="Listener log"></pre>
+      </section>
 
       <p id="status">Loading microphones...</p>
-      <pre id="log" aria-label="Listener log"></pre>
     </main>
 
     <script src="./renderer.js"></script>

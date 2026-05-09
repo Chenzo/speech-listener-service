@@ -42,6 +42,15 @@
         margin: 0 0 14px;
       }
 
+      ul {
+        margin: 0 0 14px 20px;
+        padding: 0;
+      }
+
+      li {
+        margin-bottom: 8px;
+      }
+
       a {
         color: #004c9c;
       }
@@ -119,88 +128,37 @@
 
     <main>
       <section>
-        <h2>What It Does</h2>
-        <p>
-          The service captures microphone audio with ffmpeg DirectShow, sends it
-          to a local Vosk speech recognizer, and broadcasts transcript and
-          trigger events over a local WebSocket server.
-        </p>
-
-        <div class="demo-window" aria-label="Electron app preview">
-          <div class="demo-title">Speech Listener</div>
-          <div class="demo-body">
-            <strong>Microphone</strong>
-            <div class="demo-select">Microphone (Example Device)</div>
-            <span class="demo-button">Start</span>
-            <span class="demo-button">Stop</span>
-            <p style="margin-top: 12px;">Listener running.</p>
-          </div>
-        </div>
+        <h2>Download</h2>
+        <ul>
+          <li>
+            Download the latest Windows app from
+            <a href="https://github.com/Chenzo/speech-listener-service/releases">GitHub Releases</a>.
+          </li>
+          <li>
+            Download a Vosk speech model from
+            <a href="https://alphacephei.com/vosk/models">the Vosk models page</a>.
+            We recommend <code>vosk-model-small-en-us-0.15</code>.
+          </li>
+          <li>
+            Extract the Vosk model zip file to a folder you can find again, such
+            as <code>Documents\vosk-model-small-en-us-0.15</code>.
+          </li>
+        </ul>
       </section>
 
       <section>
-        <h2>Download Release</h2>
-        <p>
-          Download the portable Windows app from this repository's GitHub
-          Releases page.
-        </p>
-        <div class="panel">
-          <p><strong>Current release requirement:</strong></p>
-          <p>
-            The Electron app bundles the launcher, Node service, and
-            Python/Vosk transcriber. Download and extract a Vosk model, then
-            choose that model folder in the app.
-          </p>
-        </div>
-      </section>
-
-      <section>
-        <h2>Run From Source</h2>
-        <p>Install Node dependencies:</p>
-        <pre><code>npm install</code></pre>
-
-        <p>Install the Python Vosk package:</p>
-        <pre><code>py -3 -m pip install vosk</code></pre>
-
-        <p>Install the default Vosk model:</p>
-        <pre><code>npm run install-model</code></pre>
-
-        <p>
-          The Electron launcher can also save a custom extracted model folder
-          with the Vosk model chooser.
-        </p>
-
-        <p>Start the command-line listener:</p>
-        <pre><code>npm run start</code></pre>
-
-        <p>Start the Electron launcher:</p>
-        <pre><code>npm run start:electron</code></pre>
-      </section>
-
-      <section>
-        <h2>WebSocket Output</h2>
-        <p>The service listens locally at:</p>
-        <pre><code>ws://localhost:3011</code></pre>
-
-        <p>Example transcript message:</p>
-        <pre><code>{ "type": "transcript", "text": "hello there", "final": false }</code></pre>
-
-        <p>Example trigger message:</p>
-        <pre><code>{ "type": "trigger", "phrase": "rock", "audio": "rl_short" }</code></pre>
-      </section>
-
-      <section>
-        <h2>Build Portable App</h2>
-        <p>Create the portable Electron executable:</p>
-        <pre><code>npm run dist</code></pre>
-
-        <p>The output is written to:</p>
-        <pre><code>dist/Speech Listener-&lt;version&gt;-portable.exe</code></pre>
-
-        <p>
-          The build machine needs PyInstaller and the Python
-          <code>vosk</code> package. Release users do not.
-        </p>
+        <h2>Setup</h2>
+        <ul>
+          <li>Launch the Speech Listener app.</li>
+          <li>Choose the microphone or audio source you want to listen to.</li>
+          <li>
+            Click the Vosk model chooser and select the extracted model folder,
+            not the original zip file.
+          </li>
+          <li>Adjust the WebSocket port or keyword triggers if needed.</li>
+          <li>Click Start.</li>
+        </ul>
+        <p>The app starts a local WebSocket server at <code>ws://localhost:3011</code> by default.</p>
       </section>
     </main>
 

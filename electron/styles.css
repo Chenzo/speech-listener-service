@@ -25,6 +25,10 @@ label {
   font-weight: 600;
 }
 
+section[hidden] {
+  display: none;
+}
+
 .device-row,
 .model-row,
 .actions {
@@ -50,8 +54,36 @@ input {
   min-width: 0;
 }
 
+.port-input {
+  display: block;
+  width: 140px;
+  margin-bottom: 12px;
+}
+
 button {
   min-width: 80px;
+}
+
+.trigger-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.trigger-heading label {
+  margin-bottom: 0;
+}
+
+.trigger-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.trigger-row input {
+  width: 100%;
 }
 
 #status {
@@ -60,7 +92,7 @@ button {
 }
 
 #log {
-  height: 210px;
+  height: 360px;
   margin: 0;
   padding: 10px;
   overflow: auto;

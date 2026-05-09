@@ -6,6 +6,10 @@ const readline = require("readline");
 const { spawn } = require("child_process");
 
 const ffmpegPath = require("ffmpeg-static");
+const {
+  DEFAULT_KEYWORD_AUDIO_TRIGGERS,
+  DEFAULT_WEBSOCKET_PORT,
+} = require("./settings-defaults");
 
 const SAMPLE_RATE = 16000;
 const CONFIG_FILE = process.env.SPEECH_CONFIG_FILE
@@ -15,22 +19,7 @@ const MODELS_DIR = path.join(__dirname, "models");
 const DEFAULT_MODEL_DIR = path.join(MODELS_DIR, "vosk-model-small-en-us-0.15");
 const TRANSCRIBE_HELPER = path.join(__dirname, "transcribe.py");
 const PACKAGED_TRANSCRIBE_HELPER = "transcribe.exe";
-const DEFAULT_WEBSOCKET_PORT = 3011;
 const TRIGGER_COOLDOWN_MS = 5000;
-const KEYWORD_AUDIO_TRIGGERS = [
-  { phrase: "rock", audio: "rl_short" },
-  { phrase: "damn it", audio: "janet" },
-  { phrase: "dammit", audio: "janet" },
-  { phrase: "trap", audio: "trap" },
-  { phrase: "dicks", audio: "dicks" },
-  { phrase: "marx brothers", audio: "mbrothers" },
-  { phrase: "marks brothers", audio: "mbrothers" },
-  { phrase: "fire", audio: "fire" },
-  { phrase: "blast them", audio: "blastem" },
-  { phrase: "blast em", audio: "blastem" },
-  { phrase: "my wife", audio: "mywife" },
-  { phrase: "we did it", audio: "doradidit" }
-];
 
 async function main() {
   if (process.platform !== "win32") {
@@ -81,8 +70,9 @@ async function main() {
   console.log("Starting speech recognition...");
   const speechHelper = await findSpeechHelper();
   const websocketPort = getWebSocketPort(config);
+  const keywordAudioTriggers = getKeywordAudioTriggers(config);
   const broadcaster = await startWebSocketServer(websocketPort);
-  startListening(deviceName, modelPath, speechHelper, broadcaster);
+  startListening(deviceName, modelPath, speechHelper, broadcaster, keywordAudioTriggers);
 }
 
 function readConfig() {
@@ -124,6 +114,24 @@ function getWebSocketPort(config) {
   }
 
   return port;
+}
+
+function getKeywordAudioTriggers(config) {
+  if (!Array.isArray(config.keywordAudioTriggers)) {
+    return DEFAULT_KEYWORD_AUDIO_TRIGGERS;
+  }
+
+  const triggers = config.keywordAudioTriggers.map((trigger) => ({
+    phrase: String((trigger && trigger.phrase) || "").trim(),
+    audio: String((trigger && trigger.audio) || "").trim(),
+  }));
+  const invalidTrigger = triggers.find((trigger) => !trigger.phrase || !trigger.audio);
+
+  if (invalidTrigger) {
+    throw new Error("Invalid keywordAudioTriggers config. Each trigger needs phrase and audio.");
+  }
+
+  return triggers;
 }
 
 function findModelPath(config) {
@@ -266,10 +274,10 @@ function transcriptHasPhrase(transcript, phrase) {
   return normalizedTranscript.includes(normalizedPhrase);
 }
 
-function logKeywordTriggers(text, source, triggerCooldowns, broadcaster) {
+function logKeywordTriggers(text, source, triggerCooldowns, broadcaster, keywordAudioTriggers) {
   const now = Date.now();
 
-  KEYWORD_AUDIO_TRIGGERS.forEach((trigger) => {
+  keywordAudioTriggers.forEach((trigger) => {
     const triggerKey = `${trigger.phrase}:${trigger.audio}`;
     const lastTriggeredAt = triggerCooldowns.get(triggerKey) || 0;
 
@@ -487,7 +495,7 @@ function findPython() {
   });
 }
 
-function startListening(deviceName, modelPath, speechHelper, broadcaster) {
+function startListening(deviceName, modelPath, speechHelper, broadcaster, keywordAudioTriggers) {
   const ffmpegArgs = [
     "-hide_banner",
     "-loglevel",
@@ -593,7 +601,7 @@ function startListening(deviceName, modelPath, speechHelper, broadcaster) {
       logTranscriptStarted();
       console.log(`[final] ${event.text}`);
       broadcaster.broadcast({ type: "transcript", text: event.text, final: true });
-      logKeywordTriggers(event.text, "final", triggerCooldowns, broadcaster);
+      logKeywordTriggers(event.text, "final", triggerCooldowns, broadcaster, keywordAudioTriggers);
       lastPartial = "";
       return;
     }
@@ -602,7 +610,7 @@ function startListening(deviceName, modelPath, speechHelper, broadcaster) {
       logTranscriptStarted();
       console.log(`[partial] ${event.text}`);
       broadcaster.broadcast({ type: "transcript", text: event.text, final: false });
-      logKeywordTriggers(event.text, "partial", triggerCooldowns, broadcaster);
+      logKeywordTriggers(event.text, "partial", triggerCooldowns, broadcaster, keywordAudioTriggers);
       lastPartial = event.text;
     }
   }

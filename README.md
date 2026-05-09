@@ -1,5 +1,7 @@
 # Speech Listener Service
 
+https://chenzo.github.io/speech-listener-service/
+
 Local Windows speech listener for a selected microphone. The Node app captures audio with ffmpeg DirectShow and runs local speech-to-text through a small Python Vosk helper process.
 
 ## Install
@@ -67,11 +69,16 @@ You can also add `websocketPort` to `.speech-listener-config.json`:
 {
   "audioDeviceName": "Your Microphone Name",
   "modelPath": "C:\\path\\to\\vosk-model-small-en-us-0.15",
-  "websocketPort": 3012
+  "websocketPort": 3012,
+  "keywordAudioTriggers": [
+    { "phrase": "rock", "audio": "rl_short" }
+  ]
 }
 ```
 
 The environment variable takes priority over the config file.
+
+The Electron app exposes microphone, Vosk model folder, WebSocket port, and keyword trigger settings in the launcher UI.
 
 ## Portable Electron Build
 

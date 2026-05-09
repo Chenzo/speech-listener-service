@@ -31,6 +31,7 @@
     "files": [
       "electron/**/*",
       "index.js",
+      "settings-defaults.js",
       "transcribe.py",
       "speech-listener.ico",
       "package.json",
