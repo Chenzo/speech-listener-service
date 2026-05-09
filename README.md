@@ -72,6 +72,14 @@ You can also add `websocketPort` to `.speech-listener-config.json`:
 
 The environment variable takes priority over the config file.
 
+## Portable Electron Build
+
+```powershell
+npm run dist
+```
+
+The portable build bundles the Python/Vosk helper with PyInstaller, so release users do not need a separate Python or Python `vosk` install. Building the release still requires PyInstaller and the Python `vosk` package on the build machine. A local Vosk model is still required at runtime.
+
 ## WebSocket Messages
 
 Transcript messages:
@@ -102,3 +110,19 @@ Status messages:
 - A local Vosk speech model
 
 The app uses `ffmpeg-static`, so a separate ffmpeg install is usually not needed.
+
+
+
+
+----
+
+## Create Releases
+
+```
+git checkout main
+git merge your-branch
+npm version 0.1.0
+npm run dist
+git push
+git push --tags
+```

@@ -20,6 +20,8 @@
 # production
 /build
 /dist
+/release-assets/
+/.pyinstaller/
 
 # misc
 .DS_Store

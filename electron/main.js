@@ -1,9 +1,11 @@
+const fs = require("fs");
 const path = require("path");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const { spawn } = require("child_process");
 
 const APP_ROOT = path.resolve(__dirname, "..");
 const LISTENER_SCRIPT = path.join(APP_ROOT, "index.js");
+const TRANSCRIBE_EXE = "transcribe.exe";
 
 let mainWindow;
 let listenerProcess;
@@ -23,10 +25,29 @@ function createWindow() {
 }
 
 function getChildEnv() {
-  return {
+  const env = {
     ...process.env,
     ELECTRON_RUN_AS_NODE: "1",
   };
+  const transcriberPath = findBundledTranscriber();
+
+  if (transcriberPath) {
+    env.SPEECH_TRANSCRIBE_EXE = transcriberPath;
+  }
+
+  return env;
+}
+
+function findBundledTranscriber() {
+  const candidates = [
+    path.join(APP_ROOT, "release-assets", "transcribe", TRANSCRIBE_EXE),
+  ];
+
+  if (process.resourcesPath) {
+    candidates.unshift(path.join(process.resourcesPath, "transcribe", TRANSCRIBE_EXE));
+  }
+
+  return candidates.find((candidate) => fs.existsSync(candidate));
 }
 
 function sendToWindow(channel, payload) {

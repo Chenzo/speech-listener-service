@@ -12,6 +12,7 @@ const CONFIG_FILE = path.join(__dirname, ".speech-listener-config.json");
 const MODELS_DIR = path.join(__dirname, "models");
 const DEFAULT_MODEL_DIR = path.join(MODELS_DIR, "vosk-model-small-en-us-0.15");
 const TRANSCRIBE_HELPER = path.join(__dirname, "transcribe.py");
+const PACKAGED_TRANSCRIBE_HELPER = "transcribe.exe";
 const DEFAULT_WEBSOCKET_PORT = 3011;
 const TRIGGER_COOLDOWN_MS = 5000;
 const KEYWORD_AUDIO_TRIGGERS = [
@@ -76,10 +77,10 @@ async function main() {
   }
 
   console.log("Starting speech recognition...");
-  const python = await findPython();
+  const speechHelper = await findSpeechHelper();
   const websocketPort = getWebSocketPort(config);
   const broadcaster = await startWebSocketServer(websocketPort);
-  startListening(deviceName, modelPath, python, broadcaster);
+  startListening(deviceName, modelPath, speechHelper, broadcaster);
 }
 
 function readConfig() {
@@ -401,6 +402,40 @@ function handleClientWebSocketFrame(socket, data) {
   }
 }
 
+function findPackagedTranscriber() {
+  const candidates = [];
+
+  if (process.env.SPEECH_TRANSCRIBE_EXE) {
+    candidates.push(process.env.SPEECH_TRANSCRIBE_EXE);
+  }
+
+  if (process.resourcesPath) {
+    candidates.push(path.join(process.resourcesPath, "transcribe", PACKAGED_TRANSCRIBE_HELPER));
+  }
+
+  return candidates.find((candidate) => fs.existsSync(candidate));
+}
+
+async function findSpeechHelper() {
+  const packagedTranscriber = findPackagedTranscriber();
+
+  if (packagedTranscriber) {
+    return {
+      command: packagedTranscriber,
+      args: [],
+      label: packagedTranscriber,
+    };
+  }
+
+  const python = await findPython();
+
+  return {
+    command: python.command,
+    args: [...python.args, TRANSCRIBE_HELPER],
+    label: [python.command, ...python.args].join(" "),
+  };
+}
+
 function findPython() {
   const candidates = process.env.PYTHON
     ? [{ command: process.env.PYTHON, args: [] }]
@@ -445,7 +480,7 @@ function findPython() {
   });
 }
 
-function startListening(deviceName, modelPath, python, broadcaster) {
+function startListening(deviceName, modelPath, speechHelper, broadcaster) {
   const ffmpegArgs = [
     "-hide_banner",
     "-loglevel",
@@ -463,8 +498,7 @@ function startListening(deviceName, modelPath, python, broadcaster) {
     "-",
   ];
   const transcriberArgs = [
-    ...python.args,
-    TRANSCRIBE_HELPER,
+    ...speechHelper.args,
     "--model",
     modelPath,
     "--sample-rate",
@@ -474,7 +508,7 @@ function startListening(deviceName, modelPath, python, broadcaster) {
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
   });
-  const transcriber = spawn(python.command, transcriberArgs, {
+  const transcriber = spawn(speechHelper.command, transcriberArgs, {
     stdio: ["pipe", "pipe", "pipe"],
     windowsHide: true,
   });
@@ -572,8 +606,7 @@ function startListening(deviceName, modelPath, python, broadcaster) {
   });
 
   transcriber.on("spawn", () => {
-    const command = [python.command, ...python.args].join(" ");
-    console.log(`Speech recognition helper started with ${command}.`);
+    console.log(`Speech recognition helper started with ${speechHelper.label}.`);
   });
 
   ffmpeg.stdout.pipe(transcriber.stdin);
