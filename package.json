@@ -5,12 +5,46 @@
   "main": "index.js",
   "scripts": {
     "install-model": "powershell -ExecutionPolicy Bypass -File scripts/install-model.ps1",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win portable",
     "start": "node index.js",
+    "start:electron": "electron electron/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "ffmpeg-static": "^5.3.0"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^39.8.6",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.speechlistenerservice.app",
+    "productName": "Speech Listener",
+    "asar": false,
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "files": [
+      "electron/**/*",
+      "index.js",
+      "transcribe.py",
+      "speech-listener.ico",
+      "package.json",
+      "!models/**",
+      "!.speech-listener-config.json"
+    ],
+    "win": {
+      "icon": "speech-listener.ico",
+      "signAndEditExecutable": false,
+      "target": [
+        "portable"
+      ]
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    }
+  }
 }

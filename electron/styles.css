@@ -1,0 +1,63 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: #111;
+  background: #f4f4f4;
+}
+
+main {
+  padding: 20px;
+}
+
+h1 {
+  margin: 0 0 20px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.device-row,
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+select {
+  flex: 1;
+}
+
+select,
+button {
+  min-height: 34px;
+  padding: 6px 10px;
+  font: inherit;
+}
+
+button {
+  min-width: 80px;
+}
+
+#status {
+  min-height: 20px;
+  margin: 12px 0;
+}
+
+#log {
+  height: 260px;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: #eee;
+  background: #222;
+}

@@ -39,12 +39,23 @@ async function main() {
   }
 
   const config = readConfig();
+  const shouldListDevices = process.argv.includes("--list-devices-json");
+  if (shouldListDevices) {
+    const devices = await listAudioDevices();
+    console.log(JSON.stringify(devices));
+    return;
+  }
+
+  const requestedDeviceName = getArgValue("--device-name");
   const shouldSelectDevice = process.argv.includes("--select-device");
-  let deviceName = config.audioDeviceName;
+  let deviceName = requestedDeviceName || config.audioDeviceName;
 
   if (shouldSelectDevice || !deviceName) {
     const devices = await listAudioDevices();
     deviceName = await chooseDevice(devices);
+    writeConfig({ ...config, audioDeviceName: deviceName });
+    console.log(`Saved selected device to ${path.basename(CONFIG_FILE)}.`);
+  } else if (requestedDeviceName && requestedDeviceName !== config.audioDeviceName) {
     writeConfig({ ...config, audioDeviceName: deviceName });
     console.log(`Saved selected device to ${path.basename(CONFIG_FILE)}.`);
   }
@@ -81,6 +92,23 @@ function readConfig() {
 
 function writeConfig(config) {
   fs.writeFileSync(CONFIG_FILE, `${JSON.stringify(config, null, 2)}\n`);
+}
+
+function getArgValue(name) {
+  const argPrefix = `${name}=`;
+  const argWithValue = process.argv.find((arg) => arg.startsWith(argPrefix));
+
+  if (argWithValue) {
+    return argWithValue.slice(argPrefix.length);
+  }
+
+  const argIndex = process.argv.indexOf(name);
+
+  if (argIndex === -1) {
+    return "";
+  }
+
+  return process.argv[argIndex + 1] || "";
 }
 
 function getWebSocketPort(config) {
