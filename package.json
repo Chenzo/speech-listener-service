@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "build:transcriber": "powershell -ExecutionPolicy Bypass -File scripts/build-transcriber.ps1",
+    "build:obs-overlay": "powershell -ExecutionPolicy Bypass -File scripts/build-obs-overlay.ps1",
     "install-model": "powershell -ExecutionPolicy Bypass -File scripts/install-model.ps1",
     "pack": "npm run build:transcriber && electron-builder --dir",
-    "dist": "npm run build:transcriber && electron-builder --win portable",
+    "dist": "npm run build:transcriber && electron-builder --win portable && npm run build:obs-overlay",
     "start": "node index.js",
     "start:electron": "electron electron/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
