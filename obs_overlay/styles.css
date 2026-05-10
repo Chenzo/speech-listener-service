@@ -1,0 +1,116 @@
+html,
+body {
+  background: transparent;
+  margin: 0;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+.micBadge {
+  left: 12px;
+  pointer-events: auto;
+  position: absolute;
+  top: 12px;
+  z-index: 1200;
+}
+
+.micIcon {
+  align-items: center;
+  appearance: none;
+  background: rgba(54, 126, 255, 0.88);
+  border: 1px solid rgba(187, 187, 187, 0.35);
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  display: flex;
+  height: 38px;
+  justify-content: center;
+  padding: 0;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  width: 38px;
+}
+
+.micActive {
+  background: rgba(54, 126, 255, 0.88);
+  border-color: rgba(140, 186, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(140, 186, 255, 0.24), 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+
+.micPaused {
+  background: rgba(240, 92, 0, 0.98);
+  border-color: rgba(255, 206, 153, 0.75);
+  box-shadow: 0 0 0 1px rgba(255, 210, 125, 0.22), 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+
+.micDisconnected {
+  background: rgba(94, 101, 114, 0.92);
+  border-color: rgba(190, 196, 205, 0.58);
+  box-shadow: 0 0 0 1px rgba(190, 196, 205, 0.18), 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+
+.micError {
+  background: rgba(214, 45, 45, 0.96);
+  border-color: rgba(255, 168, 168, 0.78);
+  box-shadow: 0 0 0 1px rgba(255, 115, 115, 0.24), 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+
+.micGlyph {
+  fill: none;
+  height: 18px;
+  stroke: #f2f7fb;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 18px;
+}
+
+.triggerPhrase {
+  animation: phraseBlink 450ms steps(2, start) infinite;
+  bottom: 8vh;
+  color: #f2f7fb;
+  font-size: 70pt;
+  font-weight: 700;
+  left: 50%;
+  line-height: 1;
+  max-width: 90vw;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  position: fixed;
+  text-align: center;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.72);
+  transform: translateX(-50%);
+  z-index: 1100;
+}
+
+.triggerPhrase[hidden] {
+  display: none;
+}
+
+#debug {
+  background: rgba(0, 0, 0, 0.72);
+  border-radius: 6px;
+  color: #fff;
+  display: none;
+  font-size: 14px;
+  left: 12px;
+  line-height: 1.4;
+  max-width: 440px;
+  padding: 10px 12px;
+  position: fixed;
+  top: 58px;
+  white-space: pre-wrap;
+}
+
+body.debug #debug {
+  display: block;
+}
+
+@keyframes phraseBlink {
+  50% {
+    opacity: 0;
+  }
+}

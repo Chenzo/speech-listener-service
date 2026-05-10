@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Speech Listener OBS Overlay</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="micBadge">
+      <button
+        id="micButton"
+        type="button"
+        class="micIcon micDisconnected"
+        aria-label="Reconnect listener"
+        aria-pressed="false"
+      >
+        <svg class="micGlyph" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 15a4 4 0 0 0 4-4V7a4 4 0 1 0-8 0v4a4 4 0 0 0 4 4Z"></path>
+          <path d="M19 11a7 7 0 0 1-14 0"></path>
+          <path d="M12 18v3"></path>
+          <path d="M8 21h8"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div id="triggerPhrase" class="triggerPhrase" hidden></div>
+    <div id="debug">Connecting...</div>
+
+    <script>
+      (function () {
+        var TRIGGER_PAUSE_MS = 5000;
+        var params = new URLSearchParams(window.location.search);
+        var host = params.get("host") || "127.0.0.1";
+        var port = params.get("port") || "3011";
+        var audioBase = params.get("audioBase") || "audio/";
+        var audioExt = params.get("audioExt") || "mp3";
+        var volume = Number(params.get("volume") || "1");
+        var debugEnabled = params.get("debug") === "1";
+        var reconnectTimer = null;
+        var pauseTimer = null;
+        var socket = null;
+        var isPaused = false;
+        var didManuallyDisconnect = false;
+        var debugEl = document.getElementById("debug");
+        var micButton = document.getElementById("micButton");
+        var triggerPhraseEl = document.getElementById("triggerPhrase");
+
+        if (debugEnabled) {
+          document.body.classList.add("debug");
+        }
+
+        function log(message) {
+          if (!debugEnabled) {
+            return;
+          }
+
+          debugEl.textContent = message;
+        }
+
+        function setMicState(state) {
+          micButton.classList.remove("micActive", "micPaused", "micDisconnected", "micError");
+
+          if (state === "active") {
+            micButton.classList.add("micActive");
+            micButton.setAttribute("aria-label", "Disconnect listener");
+            micButton.setAttribute("aria-pressed", "true");
+            return;
+          }
+
+          if (state === "paused") {
+            micButton.classList.add("micPaused");
+            micButton.setAttribute("aria-label", "Listener paused");
+            micButton.setAttribute("aria-pressed", "true");
+            return;
+          }
+
+          if (state === "error") {
+            micButton.classList.add("micError");
+            micButton.setAttribute("aria-label", "Reconnect listener");
+            micButton.setAttribute("aria-pressed", "false");
+            return;
+          }
+
+          micButton.classList.add("micDisconnected");
+          micButton.setAttribute("aria-label", "Reconnect listener");
+          micButton.setAttribute("aria-pressed", "false");
+        }
+
+        function getAudioSource(audioKey) {
+          var fileName = String(audioKey || "").trim();
+
+          if (!fileName || fileName.indexOf("..") !== -1 || !/^[a-z0-9._-]+$/i.test(fileName)) {
+            return "";
+          }
+
+          if (!/\.(mp3|wav|ogg)$/i.test(fileName)) {
+            fileName += "." + audioExt;
+          }
+
+          return audioBase + fileName;
+        }
+
+        function playAudio(audioKey) {
+          var source = getAudioSource(audioKey);
+
+          if (!source) {
+            log("Skipped unsafe or empty audio key: " + audioKey);
+            return;
+          }
+
+          var audio = new Audio(source);
+          audio.volume = Math.max(0, Math.min(1, volume));
+          audio.play().catch(function (error) {
+            log("Could not play " + source + "\n" + error.message);
+          });
+        }
+
+        function startTriggerPause(phrase) {
+          isPaused = true;
+          setMicState("paused");
+          triggerPhraseEl.textContent = phrase || "";
+          triggerPhraseEl.hidden = !phrase;
+
+          if (pauseTimer) {
+            window.clearTimeout(pauseTimer);
+          }
+
+          pauseTimer = window.setTimeout(function () {
+            pauseTimer = null;
+            isPaused = false;
+            triggerPhraseEl.hidden = true;
+            triggerPhraseEl.textContent = "";
+
+            if (socket && socket.readyState === WebSocket.OPEN) {
+              setMicState("active");
+            }
+          }, TRIGGER_PAUSE_MS);
+        }
+
+        function handleMessage(event) {
+          var message;
+
+          try {
+            message = JSON.parse(event.data);
+          } catch (error) {
+            log("Ignored non-JSON websocket message.");
+            return;
+          }
+
+          if (isPaused) {
+            log("Ignored message during trigger pause.");
+            return;
+          }
+
+          if (message.type === "trigger") {
+            playAudio(message.audio);
+            startTriggerPause(message.phrase);
+            log('Triggered "' + message.phrase + '" -> ' + message.audio);
+            return;
+          }
+
+          if (message.type === "status") {
+            log("Status: " + message.status);
+          }
+        }
+
+        function scheduleReconnect() {
+          if (reconnectTimer || didManuallyDisconnect) {
+            return;
+          }
+
+          reconnectTimer = window.setTimeout(function () {
+            reconnectTimer = null;
+            connect();
+          }, 1500);
+        }
+
+        function connect() {
+          if (socket) {
+            return;
+          }
+
+          var url = "ws://" + host + ":" + port;
+          didManuallyDisconnect = false;
+          setMicState("disconnected");
+          log("Connecting to " + url + "...");
+
+          var nextSocket = new WebSocket(url);
+          socket = nextSocket;
+
+          nextSocket.addEventListener("open", function () {
+            if (socket !== nextSocket) {
+              return;
+            }
+
+            setMicState("active");
+            log("Connected to " + url);
+          });
+
+          nextSocket.addEventListener("message", function (event) {
+            if (socket !== nextSocket) {
+              return;
+            }
+
+            handleMessage(event);
+          });
+
+          nextSocket.addEventListener("close", function () {
+            if (socket !== nextSocket) {
+              return;
+            }
+
+            socket = null;
+            setMicState(didManuallyDisconnect ? "disconnected" : "error");
+
+            if (didManuallyDisconnect) {
+              log("Disconnected.");
+              return;
+            }
+
+            log("Disconnected. Reconnecting...");
+            scheduleReconnect();
+          });
+
+          nextSocket.addEventListener("error", function () {
+            if (socket !== nextSocket) {
+              return;
+            }
+
+            setMicState("error");
+            log("Websocket error. Reconnecting...");
+
+            nextSocket.close();
+          });
+        }
+
+        function disconnect() {
+          didManuallyDisconnect = true;
+
+          if (reconnectTimer) {
+            window.clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+          }
+
+          if (pauseTimer) {
+            window.clearTimeout(pauseTimer);
+            pauseTimer = null;
+          }
+
+          isPaused = false;
+          triggerPhraseEl.hidden = true;
+          triggerPhraseEl.textContent = "";
+
+          if (socket) {
+            socket.close(1000);
+            socket = null;
+          }
+
+          setMicState("disconnected");
+          log("Disconnected.");
+        }
+
+        micButton.addEventListener("click", function () {
+          if (socket || reconnectTimer) {
+            disconnect();
+            return;
+          }
+
+          connect();
+        });
+
+        connect();
+      })();
+    </script>
+  </body>
+</html>
