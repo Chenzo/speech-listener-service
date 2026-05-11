@@ -1,5 +1,5 @@
 {
-  "name": "speech-listener-service",
+  "name": "stream-voice-triggers",
   "version": "1.3.0",
   "description": "",
   "main": "index.js",
@@ -11,6 +11,7 @@
     "dist": "npm run build:transcriber && electron-builder --win portable && npm run build:obs-overlay",
     "start": "node index.js",
     "start:electron": "electron electron/main.js",
+    "start:electron:mac": "PYTHON=$PWD/.venv/bin/python electron electron/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -23,8 +24,8 @@
     "electron-builder": "^26.8.1"
   },
   "build": {
-    "appId": "com.speechlistenerservice.app",
-    "productName": "Speech Listener",
+    "appId": "com.streamvoicetriggers.app",
+    "productName": "Stream Voice Triggers",
     "asar": false,
     "extraMetadata": {
       "main": "electron/main.js"
@@ -34,10 +35,11 @@
       "index.js",
       "settings-defaults.js",
       "transcribe.py",
-      "speech-listener.ico",
+      "stream-voice-triggers.ico",
+      "stream-voice-triggers.png",
       "package.json",
       "!models/**",
-      "!.speech-listener-config.json"
+      "!.stream-voice-triggers-config.json"
     ],
     "extraResources": [
       {
@@ -46,7 +48,7 @@
       }
     ],
     "win": {
-      "icon": "speech-listener.ico",
+      "icon": "stream-voice-triggers.ico",
       "signAndEditExecutable": false,
       "target": [
         "portable"

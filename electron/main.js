@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, nativeImage } = require("electron");
 const { spawn } = require("child_process");
 const {
   DEFAULT_KEYWORD_AUDIO_TRIGGERS,
@@ -10,8 +10,9 @@ const {
 const APP_ROOT = path.resolve(__dirname, "..");
 const LISTENER_SCRIPT = path.join(APP_ROOT, "index.js");
 const TRANSCRIBE_EXE = "transcribe.exe";
-const CONFIG_FILE_NAME = ".speech-listener-config.json";
+const CONFIG_FILE_NAME = ".stream-voice-triggers-config.json";
 const DEFAULT_MODEL_DIR = path.join(APP_ROOT, "models", "vosk-model-small-en-us-0.15");
+const DOCK_ICON = path.join(APP_ROOT, "stream-voice-triggers.png");
 
 let mainWindow;
 let listenerProcess;
@@ -30,16 +31,28 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, "index.html"));
 }
 
+function setDockIcon() {
+  if (process.platform !== "darwin") {
+    return;
+  }
+
+  const icon = nativeImage.createFromPath(DOCK_ICON);
+
+  if (!icon.isEmpty()) {
+    app.dock.setIcon(icon);
+  }
+}
+
 function getChildEnv() {
   const env = {
     ...process.env,
     ELECTRON_RUN_AS_NODE: "1",
-    SPEECH_CONFIG_FILE: getConfigFile(),
+    STREAM_VOICE_TRIGGERS_CONFIG_FILE: getConfigFile(),
   };
   const transcriberPath = findBundledTranscriber();
 
   if (transcriberPath) {
-    env.SPEECH_TRANSCRIBE_EXE = transcriberPath;
+    env.STREAM_VOICE_TRIGGERS_TRANSCRIBE_EXE = transcriberPath;
   }
 
   return env;
@@ -245,7 +258,7 @@ ipcMain.handle("model:choose", async () => {
 
 ipcMain.handle("listener:start", () => {
   if (listenerProcess && listenerProcess.exitCode === null) {
-    throw new Error("Listener is already running.");
+    throw new Error("Stream Voice Triggers is already running.");
   }
 
   const config = readConfig();
@@ -276,13 +289,16 @@ ipcMain.handle("listener:start", () => {
 
   listenerProcess.on("error", (error) => {
     sendToWindow("listener:log", { source: "error", message: `${error.message}\n` });
-    sendToWindow("listener:status", "stopped");
+    sendToWindow("listener:status", "failed");
   });
 
   listenerProcess.on("close", (code, signal) => {
     const reason = signal ? `signal ${signal}` : `code ${code}`;
-    sendToWindow("listener:log", { source: "listener", message: `Listener stopped with ${reason}.\n` });
-    sendToWindow("listener:status", "stopped");
+    sendToWindow("listener:log", {
+      source: "listener",
+      message: `Stream Voice Triggers stopped with ${reason}.\n`,
+    });
+    sendToWindow("listener:status", code === 0 || signal ? "stopped" : "failed");
     listenerProcess = null;
   });
 
@@ -294,7 +310,10 @@ ipcMain.handle("listener:stop", () => {
   return { stopped: true };
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  setDockIcon();
+  createWindow();
+});
 
 app.on("window-all-closed", () => {
   stopListener();

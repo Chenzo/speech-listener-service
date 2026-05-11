@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("speechListener", {
+contextBridge.exposeInMainWorld("streamVoiceTriggers", {
   getConfig: () => ipcRenderer.invoke("config:get"),
   saveConfig: (settings) => ipcRenderer.invoke("config:save", settings),
   listDevices: () => ipcRenderer.invoke("devices:list"),

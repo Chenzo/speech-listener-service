@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Speech Listener OBS Overlay</title>
+    <title>Stream Voice Triggers OBS Overlay</title>
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
@@ -12,7 +12,7 @@
         id="micButton"
         type="button"
         class="micIcon micDisconnected"
-        aria-label="Reconnect listener"
+        aria-label="Reconnect Stream Voice Triggers"
         aria-pressed="false"
       >
         <svg class="micGlyph" viewBox="0 0 24 24" aria-hidden="true">
@@ -63,27 +63,27 @@
 
           if (state === "active") {
             micButton.classList.add("micActive");
-            micButton.setAttribute("aria-label", "Disconnect listener");
+            micButton.setAttribute("aria-label", "Disconnect Stream Voice Triggers");
             micButton.setAttribute("aria-pressed", "true");
             return;
           }
 
           if (state === "paused") {
             micButton.classList.add("micPaused");
-            micButton.setAttribute("aria-label", "Listener paused");
+            micButton.setAttribute("aria-label", "Stream Voice Triggers paused");
             micButton.setAttribute("aria-pressed", "true");
             return;
           }
 
           if (state === "error") {
             micButton.classList.add("micError");
-            micButton.setAttribute("aria-label", "Reconnect listener");
+            micButton.setAttribute("aria-label", "Reconnect Stream Voice Triggers");
             micButton.setAttribute("aria-pressed", "false");
             return;
           }
 
           micButton.classList.add("micDisconnected");
-          micButton.setAttribute("aria-label", "Reconnect listener");
+          micButton.setAttribute("aria-label", "Reconnect Stream Voice Triggers");
           micButton.setAttribute("aria-pressed", "false");
         }
 

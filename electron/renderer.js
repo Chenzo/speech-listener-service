@@ -12,9 +12,10 @@ const stopButton = document.getElementById("stop");
 const statusText = document.getElementById("status");
 const logOutput = document.getElementById("log");
 const statusMessages = {
-  running: "Listener running.",
-  starting: "Starting listener...",
-  stopped: "Listener stopped.",
+  failed: "Stream Voice Triggers stopped with an error.",
+  running: "Stream Voice Triggers running.",
+  starting: "Starting Stream Voice Triggers...",
+  stopped: "Stream Voice Triggers stopped.",
 };
 
 function setStatus(message) {
@@ -24,6 +25,13 @@ function setStatus(message) {
 function setRunning(isRunning) {
   settingsView.hidden = isRunning;
   runningView.hidden = !isRunning;
+  stopButton.hidden = false;
+}
+
+function setFailed() {
+  settingsView.hidden = false;
+  runningView.hidden = false;
+  stopButton.hidden = true;
 }
 
 function appendLog(message) {
@@ -88,7 +96,7 @@ function getSettings() {
 }
 
 async function loadConfig() {
-  const config = await window.speechListener.getConfig();
+  const config = await window.streamVoiceTriggers.getConfig();
   setModelPath(config.modelPath);
   portInput.value = config.websocketPort;
   setTriggers(config.keywordAudioTriggers);
@@ -101,7 +109,7 @@ async function loadDevices() {
 
   try {
     const config = await loadConfig();
-    const devices = await window.speechListener.listDevices();
+    const devices = await window.streamVoiceTriggers.listDevices();
 
     devices.forEach((device) => {
       const option = document.createElement("option");
@@ -124,7 +132,7 @@ refreshButton.addEventListener("click", loadDevices);
 
 chooseModelButton.addEventListener("click", async () => {
   try {
-    const result = await window.speechListener.chooseModel();
+    const result = await window.streamVoiceTriggers.chooseModel();
 
     if (!result.canceled) {
       setModelPath(result.modelPath);
@@ -141,11 +149,11 @@ addTriggerButton.addEventListener("click", () => {
 
 startButton.addEventListener("click", async () => {
   try {
-    await window.speechListener.saveConfig(getSettings());
+    await window.streamVoiceTriggers.saveConfig(getSettings());
     logOutput.textContent = "";
     setRunning(true);
-    await window.speechListener.start();
-    setStatus("Starting listener...");
+    await window.streamVoiceTriggers.start();
+    setStatus("Starting Stream Voice Triggers...");
   } catch (error) {
     setRunning(false);
     setStatus(error.message);
@@ -154,19 +162,24 @@ startButton.addEventListener("click", async () => {
 
 stopButton.addEventListener("click", async () => {
   try {
-    await window.speechListener.stop();
-    setStatus("Stopping listener...");
+    await window.streamVoiceTriggers.stop();
+    setStatus("Stopping Stream Voice Triggers...");
   } catch (error) {
     setStatus(error.message);
   }
 });
 
-window.speechListener.onLog((payload) => {
+window.streamVoiceTriggers.onLog((payload) => {
   appendLog(`[${payload.source}] ${payload.message}`);
 });
 
-window.speechListener.onStatus((status) => {
-  setRunning(status !== "stopped");
+window.streamVoiceTriggers.onStatus((status) => {
+  if (status === "failed") {
+    setFailed();
+  } else {
+    setRunning(status !== "stopped");
+  }
+
   setStatus(statusMessages[status] || status);
 });
 

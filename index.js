@@ -12,9 +12,9 @@ const {
 } = require("./settings-defaults");
 
 const SAMPLE_RATE = 16000;
-const CONFIG_FILE = process.env.SPEECH_CONFIG_FILE
-  ? path.resolve(process.env.SPEECH_CONFIG_FILE)
-  : path.join(__dirname, ".speech-listener-config.json");
+const CONFIG_FILE = process.env.STREAM_VOICE_TRIGGERS_CONFIG_FILE
+  ? path.resolve(process.env.STREAM_VOICE_TRIGGERS_CONFIG_FILE)
+  : path.join(__dirname, ".stream-voice-triggers-config.json");
 const MODELS_DIR = path.join(__dirname, "models");
 const DEFAULT_MODEL_DIR = path.join(MODELS_DIR, "vosk-model-small-en-us-0.15");
 const TRANSCRIBE_HELPER = path.join(__dirname, "transcribe.py");
@@ -22,9 +22,7 @@ const PACKAGED_TRANSCRIBE_HELPER = "transcribe.exe";
 const TRIGGER_COOLDOWN_MS = 5000;
 
 async function main() {
-  if (process.platform !== "win32") {
-    throw new Error("This first version uses Windows DirectShow audio devices.");
-  }
+  assertSupportedPlatform();
 
   if (!ffmpegPath) {
     throw new Error("Could not find the ffmpeg binary from ffmpeg-static.");
@@ -88,6 +86,14 @@ function writeConfig(config) {
   fs.writeFileSync(CONFIG_FILE, `${JSON.stringify(config, null, 2)}\n`);
 }
 
+function assertSupportedPlatform() {
+  if (process.platform !== "win32" && process.platform !== "darwin") {
+    throw new Error(
+      "This version supports Windows DirectShow and macOS AVFoundation audio devices."
+    );
+  }
+}
+
 function getArgValue(name) {
   const argPrefix = `${name}=`;
   const argWithValue = process.argv.find((arg) => arg.startsWith(argPrefix));
@@ -106,7 +112,8 @@ function getArgValue(name) {
 }
 
 function getWebSocketPort(config) {
-  const value = process.env.SPEECH_WS_PORT || config.websocketPort || DEFAULT_WEBSOCKET_PORT;
+  const value =
+    process.env.STREAM_VOICE_TRIGGERS_WS_PORT || config.websocketPort || DEFAULT_WEBSOCKET_PORT;
   const port = Number(value);
 
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
@@ -161,7 +168,7 @@ function findModelPath(config) {
 
 function listAudioDevices() {
   return new Promise((resolve, reject) => {
-    const args = ["-hide_banner", "-list_devices", "true", "-f", "dshow", "-i", "dummy"];
+    const args = getAudioDeviceListArgs();
     const child = spawn(ffmpegPath, args, { windowsHide: true });
     let output = "";
 
@@ -176,16 +183,45 @@ function listAudioDevices() {
     child.on("error", reject);
 
     child.on("close", () => {
-      const devices = parseDshowAudioDevices(output);
+      const devices = parseAudioDevices(output);
 
       if (!devices.length) {
-        reject(new Error(`No audio input devices found.\n\nffmpeg output:\n${output.trim()}`));
+        reject(new Error(getNoAudioDevicesMessage(output)));
         return;
       }
 
       resolve(devices);
     });
   });
+}
+
+function getNoAudioDevicesMessage(output) {
+  const message = ["No audio input devices found."];
+
+  if (process.platform === "darwin") {
+    message.push(
+      "On macOS, allow microphone access for Terminal or Electron in System Settings > Privacy & Security > Microphone."
+    );
+  }
+
+  message.push("", `ffmpeg output:\n${output.trim()}`);
+  return message.join("\n");
+}
+
+function getAudioDeviceListArgs() {
+  if (process.platform === "win32") {
+    return ["-hide_banner", "-list_devices", "true", "-f", "dshow", "-i", "dummy"];
+  }
+
+  return ["-hide_banner", "-f", "avfoundation", "-list_devices", "true", "-i", ""];
+}
+
+function parseAudioDevices(output) {
+  if (process.platform === "darwin") {
+    return parseAvfoundationAudioDevices(output);
+  }
+
+  return parseDshowAudioDevices(output);
 }
 
 function parseDshowAudioDevices(output) {
@@ -221,6 +257,35 @@ function parseDshowAudioDevices(output) {
 
     if (match && !devices.includes(match[1])) {
       devices.push(match[1]);
+    }
+  });
+
+  return devices;
+}
+
+function parseAvfoundationAudioDevices(output) {
+  const devices = [];
+  let inAudioDevices = false;
+
+  output.split(/\r?\n/).forEach((line) => {
+    if (line.includes("AVFoundation audio devices")) {
+      inAudioDevices = true;
+      return;
+    }
+
+    if (line.includes("AVFoundation video devices")) {
+      inAudioDevices = false;
+      return;
+    }
+
+    if (!inAudioDevices) {
+      return;
+    }
+
+    const match = line.match(/\[\d+\]\s+(.+)$/);
+
+    if (match && !devices.includes(match[1].trim())) {
+      devices.push(match[1].trim());
     }
   });
 
@@ -420,8 +485,8 @@ function handleClientWebSocketFrame(socket, data) {
 function findPackagedTranscriber() {
   const candidates = [];
 
-  if (process.env.SPEECH_TRANSCRIBE_EXE) {
-    candidates.push(process.env.SPEECH_TRANSCRIBE_EXE);
+  if (process.env.STREAM_VOICE_TRIGGERS_TRANSCRIBE_EXE) {
+    candidates.push(process.env.STREAM_VOICE_TRIGGERS_TRANSCRIBE_EXE);
   }
 
   if (process.resourcesPath) {
@@ -452,12 +517,21 @@ async function findSpeechHelper() {
 }
 
 function findPython() {
-  const candidates = process.env.PYTHON
-    ? [{ command: process.env.PYTHON, args: [] }]
-    : [
+  let candidates;
+
+  if (process.env.PYTHON) {
+    candidates = [{ command: process.env.PYTHON, args: [] }];
+  } else if (process.platform === "win32") {
+    candidates = [
       { command: "py", args: ["-3"] },
       { command: "python", args: [] },
     ];
+  } else {
+    candidates = [
+      { command: "python3", args: [] },
+      { command: "python", args: [] },
+    ];
+  }
 
   return new Promise((resolve, reject) => {
     let index = 0;
@@ -500,10 +574,7 @@ function startListening(deviceName, modelPath, speechHelper, broadcaster, keywor
     "-hide_banner",
     "-loglevel",
     "warning",
-    "-f",
-    "dshow",
-    "-i",
-    `audio=${deviceName}`,
+    ...getAudioInputArgs(deviceName),
     "-ac",
     "1",
     "-ar",
@@ -548,7 +619,7 @@ function startListening(deviceName, modelPath, speechHelper, broadcaster, keywor
     }
 
     stopping = true;
-    console.log("Stopping listener...");
+    console.log("Stopping Stream Voice Triggers...");
     broadcaster.broadcast({ type: "status", status: "paused" });
     if (ffmpeg.exitCode === null) {
       ffmpeg.kill("SIGINT");
@@ -708,6 +779,14 @@ function startListening(deviceName, modelPath, speechHelper, broadcaster, keywor
 
   process.on("SIGINT", stop);
   process.on("SIGTERM", stop);
+}
+
+function getAudioInputArgs(deviceName) {
+  if (process.platform === "win32") {
+    return ["-f", "dshow", "-i", `audio=${deviceName}`];
+  }
+
+  return ["-f", "avfoundation", "-i", `:${deviceName}`];
 }
 
 main().catch((error) => {

@@ -9,7 +9,10 @@ except ImportError:
         json.dumps(
             {
                 "type": "error",
-                "message": "Python package 'vosk' is not installed. Run: py -3 -m pip install vosk",
+                "message": (
+                    "Python package 'vosk' is not installed. Install it in the Python "
+                    "environment used by Stream Voice Triggers."
+                ),
             }
         ),
         flush=True,
