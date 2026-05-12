@@ -25,12 +25,14 @@ function setStatus(message) {
 function setRunning(isRunning) {
   settingsView.hidden = isRunning;
   runningView.hidden = !isRunning;
-  stopButton.hidden = false;
+  startButton.hidden = isRunning;
+  stopButton.hidden = !isRunning;
 }
 
 function setFailed() {
   settingsView.hidden = false;
   runningView.hidden = false;
+  startButton.hidden = false;
   stopButton.hidden = true;
 }
 

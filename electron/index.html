@@ -8,7 +8,15 @@
   </head>
   <body>
     <main>
-      <h1>Stream Voice Triggers</h1>
+      <div class="title-row">
+        <h1>Stream Voice Triggers</h1>
+        <div class="title-actions">
+          <button id="start" type="button">Start</button>
+          <button id="stop" type="button" hidden>Stop</button>
+        </div>
+      </div>
+
+      <p id="status">Loading microphones...</p>
 
       <section id="settings-view">
         <label for="device">Microphone</label>
@@ -31,20 +39,11 @@
           <button id="add-trigger" type="button">Add</button>
         </div>
         <div id="triggers"></div>
-
-        <div class="actions">
-          <button id="start" type="button">Start</button>
-        </div>
       </section>
 
       <section id="running-view" hidden>
-        <div class="actions">
-          <button id="stop" type="button">Stop</button>
-        </div>
         <pre id="log" aria-label="Stream Voice Triggers log"></pre>
       </section>
-
-      <p id="status">Loading microphones...</p>
     </main>
 
     <script src="./renderer.js"></script>

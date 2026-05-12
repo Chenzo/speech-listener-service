@@ -2,27 +2,69 @@
   box-sizing: border-box;
 }
 
+@font-face {
+  font-family: "VT323";
+  src: url("./fonts/VT323-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+}
+
+:root {
+  --background: #020502;
+  --surface: #050b05;
+  --surface-strong: #081208;
+  --green: #a5ff66;
+  --green-dim: #68a83e;
+  --green-border: #28451e;
+  --green-glow: rgba(128, 255, 92, 0.34);
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  color: #111;
-  background: #f4f4f4;
+  font-family: "VT323", monospace;
+  color: var(--green);
+  background: var(--background);
 }
 
 main {
   padding: 20px;
 }
 
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.title-actions {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 96px;
+}
+
+.title-actions button {
+  min-width: 96px;
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: 18px;
+}
+
 h1 {
-  margin: 0 0 20px;
+  margin: 0;
   font-size: 24px;
   font-weight: 600;
+  color: var(--green);
+  text-shadow: 0 0 12px var(--green-glow);
 }
 
 label {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
+  color: var(--green);
+  text-shadow: 0 0 10px var(--green-glow);
 }
 
 section[hidden] {
@@ -47,11 +89,25 @@ button {
   min-height: 34px;
   padding: 6px 10px;
   font: inherit;
+  color: var(--green);
+  background: var(--surface);
+  border: 1px solid var(--green-border);
 }
 
 input {
   flex: 1;
   min-width: 0;
+}
+
+select:focus,
+input:focus,
+button:focus {
+  outline: 1px solid var(--green);
+  box-shadow: 0 0 12px var(--green-glow);
+}
+
+input::placeholder {
+  color: var(--green-dim);
 }
 
 .port-input {
@@ -62,6 +118,14 @@ input {
 
 button {
   min-width: 80px;
+  color: var(--green);
+  background: var(--surface-strong);
+  text-shadow: 0 0 8px var(--green-glow);
+}
+
+button:hover {
+  border-color: var(--green);
+  box-shadow: 0 0 12px var(--green-glow);
 }
 
 .trigger-heading {
@@ -89,6 +153,7 @@ button {
 #status {
   min-height: 20px;
   margin: 12px 0;
+  color: var(--green-dim);
 }
 
 #log {
@@ -97,6 +162,8 @@ button {
   padding: 10px;
   overflow: auto;
   white-space: pre-wrap;
-  color: #eee;
-  background: #222;
+  color: var(--green);
+  background: var(--surface);
+  border: 1px solid var(--green-border);
+  text-shadow: 0 0 6px rgba(128, 255, 92, 0.2);
 }
