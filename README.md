@@ -2,6 +2,8 @@
 
 https://chenzo.github.io/stream-voice-triggers/
 
+Usage and OBS setup instructions are on the GitHub Pages site above.
+
 Local voice trigger app for OBS overlays and MP3 alerts. The Node app captures audio with ffmpeg DirectShow on Windows or AVFoundation on macOS, and runs local speech-to-text through a small Python Vosk helper process.
 
 ## Install
@@ -10,16 +12,18 @@ Local voice trigger app for OBS overlays and MP3 alerts. The Node app captures a
 npm install
 ```
 
-Install the Python Vosk package:
+Install the Python Vosk package. On Windows:
 
 ```powershell
 py -3 -m pip install vosk
 ```
 
-On macOS:
+On macOS, use a local virtual environment:
 
 ```sh
-python3 -m pip install vosk
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install vosk
 ```
 
 Download a Vosk speech model from https://alphacephei.com/vosk/models and extract it into a local `models` folder. The default expected path is:
@@ -40,10 +44,24 @@ You can also point to a model elsewhere:
 $env:VOSK_MODEL_PATH="C:\path\to\vosk-model-small-en-us-0.15"
 ```
 
-## Run
+## Run From Terminal
+
+CLI listener:
 
 ```powershell
 npm start
+```
+
+Electron launcher on Windows:
+
+```powershell
+npm run start:electron
+```
+
+Electron launcher on macOS:
+
+```sh
+npm run start:electron:mac
 ```
 
 On first run, the app lists available audio input devices and prompts for a number. It saves the selected device in `.stream-voice-triggers-config.json` and uses that device automatically on future runs.
@@ -67,6 +85,12 @@ The default port is `3011`. To change it for one terminal session:
 ```powershell
 $env:STREAM_VOICE_TRIGGERS_WS_PORT="3012"
 npm start
+```
+
+On macOS:
+
+```sh
+STREAM_VOICE_TRIGGERS_WS_PORT="3012" npm start
 ```
 
 You can also add `websocketPort` to `.stream-voice-triggers-config.json`:
