@@ -158,8 +158,6 @@ On macOS, allow microphone access for the app you use to launch Stream Voice Tri
 The app uses `ffmpeg-static`, so a separate ffmpeg install is usually not needed.
 
 
-
-
 ----
 
 ## Create Releases
