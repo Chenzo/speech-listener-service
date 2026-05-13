@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { app, BrowserWindow, dialog, ipcMain, nativeImage } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, shell } = require("electron");
 const { spawn } = require("child_process");
 const {
   DEFAULT_KEYWORD_AUDIO_TRIGGERS,
@@ -12,7 +12,10 @@ const LISTENER_SCRIPT = path.join(APP_ROOT, "index.js");
 const TRANSCRIBE_EXE = "transcribe.exe";
 const CONFIG_FILE_NAME = ".stream-voice-triggers-config.json";
 const DEFAULT_MODEL_DIR = path.join(APP_ROOT, "models", "vosk-model-small-en-us-0.15");
+const APP_ICON = path.join(APP_ROOT, "stream-voice-triggers.ico");
 const DOCK_ICON = path.join(APP_ROOT, "stream-voice-triggers.png");
+const DOCUMENTATION_URL = "https://github.com/Chenzo/stream-voice-triggers";
+const DISCORD_URL = "http://discord.gg/DuR7U54";
 
 let mainWindow;
 let listenerProcess;
@@ -21,6 +24,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 720,
     height: 760,
+    icon: APP_ICON,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -41,6 +45,40 @@ function setDockIcon() {
   if (!icon.isEmpty()) {
     app.dock.setIcon(icon);
   }
+}
+
+function setApplicationMenu() {
+  if (process.platform !== "win32") {
+    return;
+  }
+
+  const menu = Menu.buildFromTemplate([
+    { role: "fileMenu" },
+    { role: "editMenu" },
+    { role: "viewMenu" },
+    { role: "windowMenu" },
+    {
+      label: "Help",
+      submenu: [
+        {
+          label: "Documentation",
+          click: () => openExternalUrl(DOCUMENTATION_URL),
+        },
+        {
+          label: "Discord",
+          click: () => openExternalUrl(DISCORD_URL),
+        },
+      ],
+    },
+  ]);
+
+  Menu.setApplicationMenu(menu);
+}
+
+function openExternalUrl(url) {
+  shell.openExternal(url).catch((error) => {
+    console.error(`Could not open ${url}: ${error.message}`);
+  });
 }
 
 function getChildEnv() {
@@ -311,6 +349,7 @@ ipcMain.handle("listener:stop", () => {
 });
 
 app.whenReady().then(() => {
+  setApplicationMenu();
   setDockIcon();
   createWindow();
 });
