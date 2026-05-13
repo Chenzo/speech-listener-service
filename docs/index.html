@@ -4,126 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Stream Voice Triggers</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        line-height: 1.5;
-        color: #111;
-        background: #f5f5f5;
-      }
-
-      header,
-      main {
-        max-width: 920px;
-        margin: 0 auto;
-        padding: 24px;
-      }
-
-      header {
-        padding-top: 40px;
-      }
-
-      h1 {
-        margin: 0 0 8px;
-        font-size: 34px;
-      }
-
-      h2 {
-        margin: 32px 0 12px;
-        font-size: 22px;
-      }
-
-      p {
-        margin: 0 0 14px;
-      }
-
-      ul {
-        margin: 0 0 14px 20px;
-        padding: 0;
-      }
-
-      li {
-        margin-bottom: 8px;
-      }
-
-      a {
-        color: #004c9c;
-      }
-
-      .panel,
-      pre {
-        border: 1px solid #d7d7d7;
-        background: #fff;
-      }
-
-      .panel {
-        padding: 16px;
-        margin: 16px 0;
-      }
-
-      .demo-window {
-        max-width: 420px;
-        border: 1px solid #c8c8c8;
-        background: #fff;
-      }
-
-      .demo-title {
-        padding: 8px 10px;
-        border-bottom: 1px solid #d7d7d7;
-        background: #ececec;
-        font-weight: 700;
-      }
-
-      .demo-body {
-        padding: 12px;
-      }
-
-      .demo-select,
-      .demo-button {
-        display: inline-block;
-        min-height: 34px;
-        padding: 6px 10px;
-        border: 1px solid #bdbdbd;
-        background: #fafafa;
-      }
-
-      .demo-select {
-        width: 100%;
-        margin: 6px 0 10px;
-      }
-
-      .demo-button {
-        min-width: 74px;
-        margin-right: 6px;
-        text-align: center;
-      }
-
-      pre {
-        overflow: auto;
-        padding: 12px;
-      }
-
-      code {
-        font-family: Consolas, "Courier New", monospace;
-      }
-
-      footer {
-        max-width: 920px;
-        margin: 24px auto 0;
-        padding: 24px;
-        color: #555;
-      }
-    </style>
+    <link rel="stylesheet" href="./docs.css">
   </head>
   <body>
     <header>
       <h1>Stream Voice Triggers</h1>
-      <p>Local voice triggers for OBS overlays and MP3 alerts.</p>
+      <p>Stream Voice Triggers listens for spoken words or phrases and sends alerts to your OBS overlay. Each phrase can trigger a matching MP3 sound. It runs locally on your computer.</p>
     </header>
 
     <main>
@@ -159,6 +45,17 @@
           <li>Click Start.</li>
         </ul>
         <p>The app starts a local WebSocket server at <code>ws://localhost:3011</code> by default.</p>
+      </section>
+
+      <section>
+        <h2>OBS Setup</h2>
+        <ul>
+          <li>Add a Browser Source in OBS.</li>
+          <li>Point the Browser Source to the local <code>obs_overlay/index.html</code> file.</li>
+          <li>Start Stream Voice Triggers before using the overlay.</li>
+          <li>Make sure each trigger audio value has a matching <code>.mp3</code> file in the <code>audio</code> folder.</li>
+        </ul>
+        <p>For example, a trigger audio value of <code>horn</code> needs <code>audio/horn.mp3</code>.</p>
       </section>
     </main>
 

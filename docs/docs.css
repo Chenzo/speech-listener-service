@@ -1,0 +1,145 @@
+* {
+  box-sizing: border-box;
+}
+
+@font-face {
+  font-family: "VT323";
+  src: url("./fonts/VT323-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+}
+
+:root {
+  --background: #020502;
+  --surface: #050b05;
+  --surface-strong: #081208;
+  --green: #a5ff66;
+  --green-dim: #68a83e;
+  --green-border: #28451e;
+  --green-glow: rgba(128, 255, 92, 0.34);
+}
+
+body {
+  margin: 0;
+  font-family: "VT323", monospace;
+  font-size: 22px;
+  line-height: 1.5;
+  color: var(--green);
+  background: var(--background);
+}
+
+header,
+main {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header {
+  padding-top: 40px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 42px;
+  font-weight: 400;
+  color: var(--green);
+  text-shadow: 0 0 14px var(--green-glow);
+}
+
+h2 {
+  margin: 32px 0 12px;
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--green);
+  text-shadow: 0 0 12px var(--green-glow);
+}
+
+p {
+  margin: 0 0 14px;
+}
+
+ul {
+  margin: 0 0 14px 20px;
+  padding: 0;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+a {
+  color: var(--green);
+  text-shadow: 0 0 8px var(--green-glow);
+}
+
+.panel,
+pre {
+  border: 1px solid var(--green-border);
+  background: var(--surface);
+}
+
+.panel {
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.demo-window {
+  max-width: 420px;
+  border: 1px solid var(--green-border);
+  background: var(--surface);
+}
+
+.demo-title {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--green-border);
+  color: var(--green);
+  background: var(--surface-strong);
+  font-weight: 400;
+  text-shadow: 0 0 10px var(--green-glow);
+}
+
+.demo-body {
+  padding: 12px;
+}
+
+.demo-select,
+.demo-button {
+  display: inline-block;
+  min-height: 34px;
+  padding: 6px 10px;
+  color: var(--green);
+  border: 1px solid var(--green-border);
+  background: var(--surface-strong);
+}
+
+.demo-select {
+  width: 100%;
+  margin: 6px 0 10px;
+}
+
+.demo-button {
+  min-width: 74px;
+  margin-right: 6px;
+  text-align: center;
+  text-shadow: 0 0 8px var(--green-glow);
+}
+
+pre {
+  overflow: auto;
+  padding: 12px;
+  color: var(--green);
+  text-shadow: 0 0 6px rgba(128, 255, 92, 0.2);
+}
+
+code {
+  font-family: "VT323", monospace;
+  color: var(--green);
+}
+
+footer {
+  max-width: 920px;
+  margin: 24px auto 0;
+  padding: 24px;
+  color: var(--green-dim);
+}
