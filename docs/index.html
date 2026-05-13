@@ -1,66 +1,128 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Stream Voice Triggers</title>
-    <link rel="stylesheet" href="./docs.css">
-  </head>
-  <body>
-    <header>
-      <h1>Stream Voice Triggers</h1>
-      <p>Stream Voice Triggers listens for spoken words or phrases and sends alerts to your OBS overlay. Each phrase can trigger a matching MP3 sound. It runs locally on your computer.</p>
-    </header>
 
-    <main>
-      <section>
-        <h2>Download</h2>
-        <ul>
-          <li>
-            Download the latest app from
-            <a href="https://github.com/Chenzo/stream-voice-triggers/releases">GitHub Releases</a>.
-          </li>
-          <li>
-            Download a Vosk speech model from
-            <a href="https://alphacephei.com/vosk/models">the Vosk models page</a>.
-            We recommend <code>vosk-model-small-en-us-0.15</code>.
-          </li>
-          <li>
-            Extract the Vosk model zip file to a folder you can find again, such
-            as <code>Documents\vosk-model-small-en-us-0.15</code>.
-          </li>
-        </ul>
-      </section>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stream Voice Triggers</title>
+  <link rel="stylesheet" href="./docs.css">
+</head>
 
-      <section>
-        <h2>Setup</h2>
-        <ul>
-          <li>Launch the Stream Voice Triggers app.</li>
-          <li>Choose the microphone or audio source you want to listen to.</li>
-          <li>
-            Click the Vosk model chooser and select the extracted model folder,
-            not the original zip file.
-          </li>
-          <li>Adjust the WebSocket port or keyword triggers if needed.</li>
-          <li>Click Start.</li>
-        </ul>
-        <p>The app starts a local WebSocket server at <code>ws://localhost:3011</code> by default.</p>
-      </section>
+<body>
+  <header>
+    <h1>Stream Voice Triggers</h1>
+    <p>Stream Voice Triggers listens for spoken words or phrases and sends alerts to your OBS overlay. Each phrase can
+      trigger a matching MP3 sound. It runs locally on your computer.</p>
+  </header>
 
-      <section>
-        <h2>OBS Setup</h2>
-        <ul>
-          <li>Add a Browser Source in OBS.</li>
-          <li>Point the Browser Source to the local <code>obs_overlay/index.html</code> file.</li>
-          <li>Start Stream Voice Triggers before using the overlay.</li>
-          <li>Make sure each trigger audio value has a matching <code>.mp3</code> file in the <code>audio</code> folder.</li>
-        </ul>
-        <p>For example, a trigger audio value of <code>horn</code> needs <code>audio/horn.mp3</code>.</p>
-      </section>
-    </main>
+  <main>
 
-    <footer>
-      <p>Stream Voice Triggers is open source on <a href="https://github.com/Chenzo/stream-voice-triggers">GitHub</a>. Report issues or bugs on the <a href="https://github.com/Chenzo/stream-voice-triggers/issues">issues page</a>. Need help, want to show off your stream, or just want to chat? Join the <a href="http://discord.gg/DuR7U54">Gentlemen of Fortune Discord</a>.</p>
-    </footer>
-  </body>
+    <aside class="image-gallery" aria-label="Screenshots">
+      <button class="thumbnail-button" type="button" data-full-image="./images/image1.png">
+        <img src="./images/image1.png" alt="Stream Voice Triggers app screenshot">
+      </button>
+      <button class="thumbnail-button" type="button" data-full-image="./images/image2.png">
+        <img src="./images/image2.png" alt="Stream Voice Triggers app settings screenshot">
+      </button>
+      <button class="thumbnail-button" type="button" data-full-image="./images/image3.png">
+        <img src="./images/image3.png" alt="Stream Voice Triggers OBS overlay screenshot">
+      </button>
+    </aside>
+
+    <section>
+      <h2>Download</h2>
+      <ul>
+        <li>
+          Download the latest app from
+          <a href="https://github.com/Chenzo/stream-voice-triggers/releases">GitHub Releases</a>.
+        </li>
+        <li>
+          Download a Vosk speech model from
+          <a href="https://alphacephei.com/vosk/models">the Vosk models page</a>.
+          We recommend <code>vosk-model-small-en-us-0.15</code>.
+        </li>
+        <li>
+          Extract the Vosk model zip file to a folder you can find again, such
+          as <code>Documents\vosk-model-small-en-us-0.15</code>.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Setup</h2>
+      <ul>
+        <li>Launch the Stream Voice Triggers app.</li>
+        <li>Choose the microphone or audio source you want to listen to.</li>
+        <li>
+          Click the Vosk model chooser and select the extracted model folder,
+          not the original zip file.
+        </li>
+        <li>Adjust the WebSocket port or keyword triggers if needed.</li>
+        <li>Click Start.</li>
+      </ul>
+      <p>The app starts a local WebSocket server at <code>ws://localhost:3011</code> by default.</p>
+    </section>
+
+    <section>
+      <h2>OBS Setup</h2>
+      <ul>
+        <li>Add a Browser Source in OBS.</li>
+        <li>Point the Browser Source to the local <code>obs_overlay/index.html</code> file.</li>
+        <li>Start Stream Voice Triggers before using the overlay.</li>
+        <li>Make sure each trigger audio value has a matching <code>.mp3</code> file in the <code>audio</code> folder.
+        </li>
+      </ul>
+      <p>For example, a trigger audio value of <code>horn</code> needs <code>audio/horn.mp3</code>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Stream Voice Triggers is open source on <a href="https://github.com/Chenzo/stream-voice-triggers">GitHub</a>.
+      Report issues or bugs on the <a href="https://github.com/Chenzo/stream-voice-triggers/issues">issues page</a>.
+      Need help, want to show off your stream, or just want to chat? Join the <a
+        href="http://discord.gg/DuR7U54">Gentlemen of Fortune Discord</a>.</p>
+  </footer>
+
+  <div class="image-modal" data-image-modal hidden>
+    <button class="modal-backdrop" type="button" data-close-modal aria-label="Close image preview"></button>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-label="Image preview">
+      <button class="modal-close" type="button" data-close-modal>Close</button>
+      <img data-modal-image src="" alt="">
+    </div>
+  </div>
+
+  <script>
+    const imageModal = document.querySelector("[data-image-modal]");
+    const modalImage = document.querySelector("[data-modal-image]");
+    const imageButtons = document.querySelectorAll("[data-full-image]");
+    const closeButtons = document.querySelectorAll("[data-close-modal]");
+
+    function closeImageModal() {
+      imageModal.hidden = true;
+      modalImage.removeAttribute("src");
+      modalImage.alt = "";
+    }
+
+    imageButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const image = button.querySelector("img");
+
+        modalImage.src = button.dataset.fullImage;
+        modalImage.alt = image.alt;
+        imageModal.hidden = false;
+      });
+    });
+
+    closeButtons.forEach((button) => {
+      button.addEventListener("click", closeImageModal);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !imageModal.hidden) {
+        closeImageModal();
+      }
+    });
+  </script>
+</body>
+
 </html>

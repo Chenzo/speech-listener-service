@@ -4,7 +4,11 @@ https://chenzo.github.io/stream-voice-triggers/
 
 Usage and OBS setup instructions are on the GitHub Pages site above.
 
+![Stream Voice Triggers](docs/images/image1.png)
+
 Local voice trigger app for OBS overlays and MP3 alerts. The Node app captures audio with ffmpeg DirectShow on Windows or AVFoundation on macOS, and runs local speech-to-text through a small Python Vosk helper process.
+
+
 
 ## Install
 
